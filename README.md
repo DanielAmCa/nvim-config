@@ -10,4 +10,4 @@
 |_______/  \_______/ \_______/|________/    \_/    |__/|__/ |__/ |__/
 =====================================================================
 ```
-A rather **serious** and **professional** markdown/latex/python-centric config for DeezVim. ~~Deez~~ This is **serious**. **_Really_ serious**.
+A rather **serious** and **professional** markdown/latex/python-centric config for NeoVim. ~~Deez~~ This is **serious**. **_Really_ serious**.
