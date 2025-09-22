@@ -16,7 +16,6 @@ vim.keymap.set("n", "<leader>fc", function()
     require("telescope.builtin").find_files({
         prompt_title = "  Find Config",
         cwd = vim.fn.stdpath("config"), -- ~/.config/nvim by default
-        hidden = true, -- include dotfiles
     })
 end, { desc = "Find in Config" })
 
