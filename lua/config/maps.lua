@@ -116,10 +116,12 @@ vim.keymap.set("n", "<leader>dv", function()
 end, { silent = true, noremap = true })
 
 -- Lazy
+
 --- vanilla vim
 vim.keymap.set("n", "<leader>l", vim.cmd.Lazy, { desc = "Show Lazy" })
 
 -- Completions and snippets
+
 --- luasnip
 vim.keymap.set({ "i", "s" }, "<Tab>", function()
     if ls.expand_or_jumpable() then
