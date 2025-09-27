@@ -7,10 +7,10 @@ harpoon:setup()
 -- File finding
 
 --- vanilla vim
-vim.keymap.set("n", "<leader>ft", vim.cmd.Ex, { desc = "Show Netwr" })
+vim.keymap.set("n", "<leader>ff", vim.cmd.Ex, { desc = "Show Netwr" })
 
 --- telescope
-vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Telescope find files" })
+vim.keymap.set("n", "<leader><leader>", builtin.find_files, { desc = "Telescope find files" })
 vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Telescope live grep" })
 vim.keymap.set("n", "<leader>fc", function()
     require("telescope.builtin").find_files({
@@ -84,7 +84,7 @@ vim.keymap.set("n", "J", "mzJ`z", { desc = "Append next line" })
 
 --- vanilla vim
 vim.keymap.set("n", "n", "nzzzv", { desc = "Next search match" })
-vim.keymap.set("n", "N", "nzzzv", { desc = "Previous search match" })
+vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous search match" })
 
 vim.keymap.set(
     "n",

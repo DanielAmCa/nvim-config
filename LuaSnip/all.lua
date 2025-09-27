@@ -27,19 +27,19 @@ local ms = ls.multi_snippet
 local k = require("luasnip.nodes.key_indexer").new_key
 local ts_utils = require("nvim-treesitter.ts_utils")
 
-local get_visual = function(args, parent)
+function TableConcat(t1, t2)
+    for j = 1, #t2 do
+        t1[#t1 + 1] = t2[j]
+    end
+    return t1
+end
+
+local get_visual = function(_, parent)
     if #parent.snippet.env.LS_SELECT_RAW > 0 then
         return sn(nil, i(1, parent.snippet.env.LS_SELECT_RAW))
     else -- If LS_SELECT_RAW is empty, return a blank insert node
         return sn(nil, i(1))
     end
-end
-
-local function tables(t1, t2)
-    for i = 1, #t2 do
-        t1[#t1 + 1] = t2[i]
-    end
-    return t1
 end
 
 local math = function()
@@ -62,18 +62,6 @@ local not_math = function()
     return not math()
 end
 
-local rec_ls
-rec_ls = function()
-    return sn(nil, {
-        c(1, {
-            -- important!! Having the sn(...) as the first choice will cause infinite recursion.
-            t({ "" }),
-            -- The same dynamicNode as in the snippet (also note: self reference).
-            sn(nil, { t({ "", "\t\\item " }), i(1), d(2, rec_ls, {}) }),
-        }),
-    })
-end
-
 local math_snippets = {
 
     -- Math Zones
@@ -82,95 +70,40 @@ local math_snippets = {
         trig = "mii",
         wordTrig = false,
         snippetType = "autosnippet",
+        condition = not_math,
     }, {
         t("$"),
-        i(1),
+        d(1, get_visual),
         t("$"),
     }),
 
-    s(
-        {
-            trig = "mzz",
-            wordTrig = false,
-            snippetType = "autosnippet",
-        },
-        fmta(
-            [[
-            $$
-            <>
-            $$
-            <>
-            ]],
-            { d(1, get_visual), i(0) }
-        )
-    ),
+    s({
+        trig = "(.)mzz",
+        regTrig = true,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = not_math,
+    }, {
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t({ "", "", "$$", "" }),
+        d(1, get_visual),
+        t({ "", "$$", "" }),
+    }),
+
+    s({
+        trig = "^mzz",
+        regTrig = true,
+        wordTrig = false,
+        snippetType = "autosnippet",
+    }, {
+        t({ "$$", "" }),
+        d(1, get_visual),
+        t({ "", "$$", "" }),
+    }),
 
     -- Delimiters
-
-    s(
-        {
-            trig = [[([^a-zA-Z0-9s])([^a-zA-Z0-9s])lr]],
-            wordTrig = false,
-            regTrig = true,
-            snippetType = "autosnippet",
-        },
-        fmta([[\left<> <> \right<>]], {
-            f(function(_, snip)
-                return snip.captures[1]
-            end),
-            d(1, get_visual),
-            f(function(_, snip)
-                return snip.captures[2]
-            end),
-        }),
-        { condition = math }
-    ),
-
-    s(
-        {
-            trig = [[([^a-zA-Z0-9s])([^a-zA-Z0-9s])([^a-zA-Z0-9s])lmr]],
-            wordTrig = false,
-            regTrig = true,
-            snippetType = "autosnippet",
-            condition = math,
-        },
-        fmta([[\left<> <> \middle<> <> \right<>]], {
-            f(function(_, snip)
-                return snip.captures[1]
-            end),
-            i(1),
-            f(function(_, snip)
-                return snip.captures[2]
-            end),
-            i(2),
-            f(function(_, snip)
-                return snip.captures[3]
-            end),
-        })
-    ),
-
-    s(
-        {
-            trig = [[([^a-zA-Z0-9s])([^a-zA-Z0-9s])([^a-zA-Z0-9s])lmr]],
-            wordTrig = false,
-            regTrig = true,
-            snippetType = "autosnippet",
-            condition = math,
-        },
-        fmta([[\left<> <> \middle<> <> \right<>]], {
-            f(function(_, snip)
-                return snip.captures[1]
-            end),
-            i(1),
-            f(function(_, snip)
-                return snip.captures[2]
-            end),
-            i(2),
-            f(function(_, snip)
-                return snip.captures[3]
-            end),
-        })
-    ),
 
     s(
         {
@@ -197,7 +130,7 @@ local math_snippets = {
                     return "\\|"
                 end
             end),
-            i(1),
+            d(1, get_visual),
             f(function(_, snip)
                 local choice = snip.captures[1]
                 if choice == "a" then
@@ -1444,6 +1377,32 @@ local math_snippets = {
         condition = math,
     }, { t("{\\varOmega}") }),
 
+    -- Other Symbols
+
+    s({
+        trig = "ell",
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("{\\ell}") }),
+
+    s({
+        trig = "qed",
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("{\\blacksquare}") }),
+
+    s({
+        trig = "ooo",
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("{\\infty}") }),
+
     -- Logic & Set Theory
 
     s({
@@ -1570,18 +1529,25 @@ local math_snippets = {
     -- Named sets
 
     s({
-        trig = "RR",
-        wordTrig = false,
-        snippetType = "autosnippet",
-        condition = math,
-    }, { t("{\\R}") }),
-
-    s({
         trig = "NN",
         wordTrig = false,
         snippetType = "autosnippet",
         condition = math,
     }, { t("{\\N}") }),
+
+    s({
+        trig = "ZZ",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("{\\Z}") }),
+
+    s({
+        trig = "RR",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("{\\R}") }),
 
     s({
         trig = "CC",
@@ -1591,11 +1557,32 @@ local math_snippets = {
     }, { t("{\\Complex}") }),
 
     s({
-        trig = "ZZ",
+        trig = "R([a-z0-9])",
         wordTrig = false,
+        regTrig = true,
         snippetType = "autosnippet",
         condition = math,
-    }, { t("{\\Z}") }),
+    }, {
+        t("{\\R}^{"),
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("}"),
+    }),
+
+    s({
+        trig = "C([a-z0-9])",
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("{\\Complex}^{"),
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("}"),
+    }),
 
     s({
         trig = "empty",
@@ -1642,6 +1629,42 @@ local math_snippets = {
     }, { t("\\times ") }),
 
     s({
+        trig = "o+ ",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\osum ") }),
+
+    s({
+        trig = "o- ",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\ominus ") }),
+
+    s({
+        trig = "o. ",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\odot ") }),
+
+    s({
+        trig = "oxx",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        priority = 2000,
+        condition = math,
+    }, { t("\\otimes ") }),
+
+    s({
+        trig = "o/ ",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\oslash ") }),
+
+    s({
         trig = "mod",
         wordTrig = false,
         snippetType = "autosnippet",
@@ -1665,7 +1688,975 @@ local math_snippets = {
         return snip.captures[1] .. "\\pm "
     end) }),
 
-    --
+    s({
+        trig = "[(]([^(]+)[)]/",
+        regTrig = true,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\frac{"),
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("}{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "ff",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\frac{"),
+        d(1, get_visual),
+        t("}{"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = "rd",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("^{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "sr",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("^{2}"),
+    }),
+
+    s({
+        trig = "cb",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("^{3}"),
+    }),
+
+    s({
+        trig = "invs",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("^{-1}"),
+    }),
+
+    -- Math Operators
+
+    s({
+        trig = "sin",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\sin{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "cos",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\cos{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "tan",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\tan{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "asin",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\arcsin{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "acos",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\arccos{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "atan",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\arctan{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "hsin",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\sinh{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "hcos",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\cosh{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "htan",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\tanh{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "log",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\log_{"),
+        i(1, "2"),
+        t("}{"),
+        d(2, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "lg",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\lg{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "ln",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\ln{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "lim",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\lim_{"),
+        i(1, "x"),
+        t(" \\to "),
+        i(2, "\\infty"),
+        t("}{"),
+        d(3, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "max",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\max{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "min",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\min{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "dett",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\det{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "ker",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\ker{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "img",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\operatorname{im}{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "sqr([a-su-z0-9])",
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\sqrt["),
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("]{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "sqq",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\sqrt{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "bigo",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\operatorname{\\mathcal{O}}{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "vbigo",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\operatorname{\\mathcal{\\pmb{O}}}{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "lito",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\operatorname{\\scriptstyle \\mathcal{O}}{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "vlito",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\operatorname{\\scriptstyle \\mathcal{\\pmb{O}}}{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    -- Matrices
+
+    s({
+        trig = [[([%d]+)arr([%d]+) ]],
+        regTrig = true,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t({ "\\begin{matrix}", "" }),
+        d(1, function(_, snip)
+            local rr = tonumber(snip.captures[1])
+            local cc = tonumber(snip.captures[2])
+            local nodes = {}
+            for c_r = 1, rr do
+                for c_c = 1, cc do
+                    local idx = (c_r - 1) * cc + c_c
+                    vim.list_extend(nodes, { i(idx, "·") })
+                    if c_c < cc then
+                        vim.list_extend(nodes, { t(" & ") })
+                    end
+                end
+                if c_r < rr then
+                    vim.list_extend(nodes, { t({ " \\\\", "" }) })
+                end
+            end
+            return sn(nil, nodes)
+        end),
+        t({ "", "\\end{matrix}" }),
+    }),
+
+    s({
+        trig = [[([%d]+)mat([%d]+) ]],
+        regTrig = true,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t({ "\\begin{bmatrix}", "" }),
+        d(1, function(_, snip)
+            local rr = tonumber(snip.captures[1])
+            local cc = tonumber(snip.captures[2])
+            local nodes = {}
+            for c_r = 1, rr do
+                for c_c = 1, cc do
+                    local idx = (c_r - 1) * cc + c_c
+                    vim.list_extend(nodes, { i(idx, "·") })
+                    if c_c < cc then
+                        vim.list_extend(nodes, { t(" & ") })
+                    end
+                end
+                if c_r < rr then
+                    vim.list_extend(nodes, { t({ " \\\\", "" }) })
+                end
+            end
+            return sn(nil, nodes)
+        end),
+        t({ "", "\\end{bmatrix}" }),
+    }),
+
+    s({
+        trig = [[([%d]+)det([%d]+) ]],
+        regTrig = true,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t({ "\\begin{vmatrix}", "" }),
+        d(1, function(_, snip)
+            local rr = tonumber(snip.captures[1])
+            local cc = tonumber(snip.captures[2])
+            local nodes = {}
+            for c_r = 1, rr do
+                for c_c = 1, cc do
+                    local idx = (c_r - 1) * cc + c_c
+                    vim.list_extend(nodes, { i(idx, "·") })
+                    if c_c < cc then
+                        vim.list_extend(nodes, { t(" & ") })
+                    end
+                end
+                if c_r < rr then
+                    vim.list_extend(nodes, { t({ " \\\\", "" }) })
+                end
+            end
+            return sn(nil, nodes)
+        end),
+        t({ "", "\\end{vmatrix}" }),
+    }),
+
+    s({
+        trig = "...",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\dots ") }),
+
+    s({
+        trig = "v...",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\vdots ") }),
+
+    s({
+        trig = "c...",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\cdots ") }),
+
+    s({
+        trig = "d...",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\ddots ") }),
+
+    s({
+        trig = "Tr",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("^{\\mathrm{T}}") }),
+
+    -- Vectors
+
+    postfix({
+        trig = "vec",
+        snippetType = "autosnippet",
+        condition = math,
+    }, { l("\\mathbf{" .. l.POSTFIX_MATCH .. "}") }, { condition = math }),
+
+    -- Subscript
+
+    s({
+        trig = [[([A-Za-z\{\}]+)([0-9]+) ]],
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("_{"),
+        f(function(_, snip)
+            return snip.captures[2]
+        end),
+        t("}"),
+    }, { condition = math }),
+
+    s({
+        trig = "_",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("_{"),
+        i(1),
+        t("}"),
+    }),
+
+    -- Analysis
+
+    s({
+        trig = "dif",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\mathrm{d}") }),
+
+    s({
+        trig = "pdif",
+        priority = 2000,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\partial ") }),
+
+    s({
+        trig = "(\\mathrm{d}[A-Za-z])dif",
+        priority = 3000,
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("\\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "(\\partial [A-Za-z])pdif",
+        priority = 3000,
+        wordTrig = false,
+        regTrig = true,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t("\\,\\partial "),
+    }),
+
+    s({
+        trig = "der",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\frac{\\mathrm{d}"),
+        i(1),
+        t("}{\\mathrm{d}"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = "pder",
+        priority = 2000,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\frac{{\\partial "),
+        i(1),
+        t("}{{\\partial }"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = [[([\\]frac[^%s]+)eval]],
+        regTrig = true,
+        wordTrig = false,
+        priority = 2000,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\left. "),
+        f(function(_, snip)
+            return snip.captures[1]
+        end),
+        t(" \\right|_{"),
+        i(1),
+        t("}"),
+    }),
+
+    s({
+        trig = "eval",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\left. "),
+        d(1, get_visual),
+        t(" \\right|_{"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = "sum",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\sum_{"),
+        i(1),
+        t("}^{"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = "prod",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\prod_{"),
+        i(1),
+        t("}^{"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = "int",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\int "),
+        i(1),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "dint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\int_{"),
+        i(1),
+        t("}^{"),
+        i(2),
+        t("} "),
+        i(3),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "iint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\iint "),
+        i(1),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "oint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, {
+        t("\\oint_{"),
+        i(1),
+        t("} "),
+        i(2),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "diint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 3000,
+    }, {
+        t("\\iint_{"),
+        i(1),
+        t("} "),
+        i(2),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "iiint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 3000,
+    }, {
+        t("\\iiint "),
+        i(1),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "oiint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 3000,
+    }, {
+        t("\\oiint_{"),
+        i(1),
+        t("} "),
+        i(2),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "diiint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 4000,
+    }, {
+        t("\\iiint_{"),
+        i(1),
+        t("} "),
+        i(2),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "oiiint",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 4000,
+    }, {
+        t("\\oiiint_{"),
+        i(1),
+        t("} "),
+        i(2),
+        t(" \\,\\mathrm{d}"),
+    }),
+
+    s({
+        trig = "gra",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\nabla ") }),
+
+    -- Relations
+
+    s({
+        trig = "lt",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("<") }),
+
+    s({
+        trig = "gt",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t(">") }),
+
+    s({
+        trig = "leq",
+        wordTrig = false,
+        priority = 2000,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\leq ") }),
+
+    s({
+        trig = "geq",
+        priority = 2000,
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\geq ") }),
+
+    s({
+        trig = "lll",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\lll ") }),
+
+    s({
+        trig = "ggg",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\ggg ") }),
+
+    s({
+        trig = "approx",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\approx ") }),
+
+    s({
+        trig = ":=",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\coloneq ") }),
+
+    s({
+        trig = "tri",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\equiv ") }),
+
+    s({
+        trig = "sim",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\sim ") }),
+
+    s({
+        trig = "par",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\parallel ") }),
+
+    s({
+        trig = "perp",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, { t("\\perp ") }),
+
+    s({
+        trig = "neq",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+        priority = 2000,
+    }, { t("\\neq ") }),
+
+    -- Environments
+
+    s({
+        trig = "sst",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\substack{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "llap",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\mathllap{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "clap",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\mathclap{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "rlap",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\mathrlap{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "box",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\boxed{"),
+        d(1, get_visual),
+        t("}"),
+    }),
+
+    s({
+        trig = "ove",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\overbrace{"),
+        d(1, get_visual),
+        t("}^{"),
+        i(2),
+        t("}"),
+    }),
+
+    s({
+        trig = "und",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\underbrace{"),
+        d(1, get_visual),
+        t("}_{"),
+        i(2),
+        t("}"),
+    }),
+
+    -- Spacing
+
+    s({
+        trig = "quad",
+        wordTrig = false,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\quad "),
+    }),
+
+    s({
+        trig = "qquad",
+        wordTrig = false,
+        priority = 2000,
+        snippetType = "autosnippet",
+        condition = math,
+    }, {
+        t("\\qquad "),
+    }),
 }
 
 return math_snippets
