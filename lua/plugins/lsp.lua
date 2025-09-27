@@ -89,6 +89,7 @@ return {
                 ["markdown"] = { "prettier", "markdownlint-cli2", "markdown-toc" },
                 ["markdown.mdx"] = { "prettier", "markdownlint-cli2", "markdown-toc" },
                 ["lua"] = { "my_stylua" },
+                ["python"] = { "isort", "black" },
             },
         },
     },

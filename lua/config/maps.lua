@@ -155,3 +155,11 @@ end)
 vim.keymap.set("n", "<leader>nh", function()
     require("noice").cmd("history")
 end)
+
+-- Terminal
+
+--- vanilla vim
+vim.keymap.set("t", "<C-Space>", "<C-\\><C-n>l")
+
+-- toggleterm
+vim.keymap.set("n", "<leader>t", "<cmd>ToggleTerm<cr>")

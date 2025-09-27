@@ -9,5 +9,11 @@ require("lualine").setup({
                 return "@" .. reg
             end,
         },
+        lualine_x = {
+            "venv-selector", -- You can customize the look of the output, see below`.
+            "encoding",
+            "fileformat",
+            "filetype",
+        },
     },
 })
