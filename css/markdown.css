@@ -370,3 +370,10 @@ li:has(img):not(:has(:not(img))) {
   margin-top: 24px !important;
   margin-bottom: 24px !important;
 }
+
+h1 + p {
+    text-align: center;
+    font-size: 2em;
+    font-weight: 500;
+    font-style: italic;
+}

@@ -121,7 +121,7 @@ local math_snippets = {
                 elseif choice == "b" then
                     return "["
                 elseif choice == "c" then
-                    return "{"
+                    return "\\{"
                 elseif choice == "p" then
                     return "("
                 elseif choice == "v" then
@@ -138,7 +138,7 @@ local math_snippets = {
                 elseif choice == "b" then
                     return "]"
                 elseif choice == "c" then
-                    return "}"
+                    return "\\}"
                 elseif choice == "p" then
                     return ")"
                 elseif choice == "v" then
@@ -1633,7 +1633,7 @@ local math_snippets = {
         wordTrig = false,
         snippetType = "autosnippet",
         condition = math,
-    }, { t("\\osum ") }),
+    }, { t("\\oplus ") }),
 
     s({
         trig = "o- ",
@@ -1679,13 +1679,13 @@ local math_snippets = {
     }, { t("\\pm ") }),
 
     s({
-        trig = "(.)-+",
+        trig = "(.)-[+]",
         regTrig = true,
         wordTrig = false,
         snippetType = "autosnippet",
         condition = math,
     }, { f(function(_, snip)
-        return snip.captures[1] .. "\\pm "
+        return snip.captures[1] .. "\\mp "
     end) }),
 
     s({
@@ -2516,7 +2516,7 @@ local math_snippets = {
         wordTrig = false,
         snippetType = "autosnippet",
         condition = math,
-    }, { t("\\coloneq ") }),
+    }, { t("\\coloneqq ") }),
 
     s({
         trig = "tri",
