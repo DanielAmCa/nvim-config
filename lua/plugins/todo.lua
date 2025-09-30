@@ -1,7 +1,7 @@
 return {
     {
-        "theprimeagen/harpoon",
-        branch = "harpoon2",
+        "folke/todo-comments.nvim",
         dependencies = { "nvim-lua/plenary.nvim" },
+        opts = {},
     },
 }

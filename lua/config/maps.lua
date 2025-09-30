@@ -29,22 +29,25 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Move down half a page" })
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Move up half a page" })
 
 --- harpoon
-vim.keymap.set("n", "<leader>ba", function()
+vim.keymap.set("n", "<leader>a", function()
     harpoon:list():add()
-end, { desc = "Harpoon file" })
+end, { desc = "Harpoon current buffer" })
+vim.keymap.set("n", "<leader>hd", function()
+    harpoon:list():remove()
+end, { desc = "Unharpoon current buffer" })
 
-vim.keymap.set("n", "<leader>bh", function()
+vim.keymap.set("n", "<leader>hh", function()
     harpoon:list():select(1)
-end, { desc = "Reel into first file" })
-vim.keymap.set("n", "<leader>bj", function()
+end, { desc = "Reel into first buffer" })
+vim.keymap.set("n", "<leader>hj", function()
     harpoon:list():select(2)
-end, { desc = "Reel into second file" })
-vim.keymap.set("n", "<leader>bk", function()
+end, { desc = "Reel into second buffer" })
+vim.keymap.set("n", "<leader>hk", function()
     harpoon:list():select(3)
-end, { desc = "Reel into third file" })
-vim.keymap.set("n", "<leader>bl", function()
+end, { desc = "Reel into third buffer" })
+vim.keymap.set("n", "<leader>hl", function()
     harpoon:list():select(4)
-end, { desc = "Reel into fourth file" })
+end, { desc = "Reel into fourth buffer" })
 
 -- Window management
 
@@ -163,3 +166,6 @@ vim.keymap.set("t", "<C-Space>", "<C-\\><C-n>l")
 
 -- toggleterm
 vim.keymap.set("n", "<leader>t", "<cmd>ToggleTerm<cr>")
+
+-- TODO
+vim.keymap.set("n", "<leader>ft", vim.cmd.TodoTelescope)
