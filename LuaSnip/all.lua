@@ -1557,7 +1557,7 @@ local math_snippets = {
     }, { t("{\\Complex}") }),
 
     s({
-        trig = "R([a-z0-9])",
+        trig = "R([n0-9])",
         wordTrig = false,
         regTrig = true,
         snippetType = "autosnippet",
@@ -1571,7 +1571,7 @@ local math_snippets = {
     }),
 
     s({
-        trig = "C([a-z0-9])",
+        trig = "C([n0-9])",
         wordTrig = false,
         regTrig = true,
         snippetType = "autosnippet",
@@ -2267,9 +2267,9 @@ local math_snippets = {
         snippetType = "autosnippet",
         condition = math,
     }, {
-        t("\\frac{{\\partial "),
+        t("\\frac{{\\partial}"),
         i(1),
-        t("}{{\\partial }"),
+        t("}{{\\partial}"),
         i(2),
         t("}"),
     }),
