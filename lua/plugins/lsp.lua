@@ -33,7 +33,7 @@ return {
         config = function()
             require("lint").linters_by_ft = {
                 markdown = { "markdownlint-cli2", "alex" },
-                python = { "ruff" },
+                python = { "flake8", "pylint", "mypy" },
                 html = { "htmlhint" },
             }
         end,
@@ -81,7 +81,18 @@ return {
             formatters = {
                 my_stylua = {
                     command = "stylua",
-                    args = { "--indent-type", "Spaces", "--indent-width", "4", "-" },
+                    args = { "-", "--indent-type", "Spaces", "--indent-width", "4" },
+                    stdin = true,
+                },
+                my_black = {
+                    command = "black",
+                    prepend_args = { "--line-length", "80" },
+                    args = { "-" },
+                    stdin = true,
+                },
+                my_isort = {
+                    command = "isort",
+                    args = { "-", "--profile", "black" },
                     stdin = true,
                 },
             },
@@ -89,9 +100,10 @@ return {
                 ["markdown"] = { "prettier" },
                 ["markdown.mdx"] = { "prettier" },
                 ["lua"] = { "my_stylua" },
-                ["python"] = { "isort", "black" },
+                ["python"] = { "my_isort", "my_black" },
                 ["css"] = { "prettier" },
             },
+            timeout_ms = 5000,
         },
     },
 }
