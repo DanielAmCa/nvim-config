@@ -1,46 +1,68 @@
 return {
-    { "mason-org/mason.nvim", opts = {} },
-    { "mason-org/mason-lspconfig.nvim", opts = {} },
+    {
+        "williamboman/mason.nvim",
+        opts = {},
+    },
+    {
+        "williamboman/mason-lspconfig.nvim",
+        opts = {
+            ensure_installed = { "lua_ls", "pyright" },
+        },
+    },
 
     {
         "neovim/nvim-lspconfig",
-
         config = function()
+            require("mason").setup()
+            require("mason-lspconfig").setup()
+
+            vim.diagnostic.config({ virtual_text = true })
+
             vim.lsp.config("lua_ls", {
                 settings = {
                     Lua = {
                         diagnostics = {
-                            globals = { "vim" }, -- Add 'vim' as a recognized global
+                            globals = { "vim" },
                         },
                         workspace = {
-                            library = vim.api.nvim_get_runtime_file("", true), -- Include Neovim runtime files
-                            checkThirdParty = false, -- Avoid annoying prompts for third-party libraries
+                            library = vim.api.nvim_get_runtime_file("", true),
+                            checkThirdParty = false,
                         },
-                        telemetry = {
-                            enable = false, -- Disable telemetry
-                        },
+                        telemetry = { enable = false },
                     },
                 },
             })
-            vim.lsp.enable("lua_ls")
-            vim.lsp.handlers["$/progress"] = function() end
-            vim.diagnostic.config({ virtual_text = true })
+
+            -- Delay enabling to ensure config is fully loaded
+            vim.defer_fn(function()
+                vim.lsp.enable("lua_ls")
+                vim.lsp.enable("pyright")
+            end, 100)
         end,
     },
+
     {
         "mfussenegger/nvim-lint",
-
         config = function()
             require("lint").linters_by_ft = {
                 markdown = { "markdownlint-cli2", "alex" },
                 python = { "flake8", "pylint", "mypy" },
                 html = { "htmlhint" },
             }
+
+            -- Auto-lint on save
+            vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+                callback = function()
+                    require("lint").try_lint()
+                end,
+            })
         end,
     },
+
+    -- Your trouble.nvim and conform.nvim config remains the same
     {
         "folke/trouble.nvim",
-        opts = {}, -- for default options, refer to the configuration section for custom setup.
+        opts = {},
         cmd = "Trouble",
         keys = {
             {
